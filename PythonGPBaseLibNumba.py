@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# for Python 3.6
+# for Python 3.7
 # Simple Function Set Libarary for Genetic Programming in Python
 # Daichi Ando @daichi_a daichi-a
 import PythonGPBaseLib
@@ -59,7 +59,6 @@ def replaceVariableWithStatic(programList, variableDict):
 def replaceNodeToIntLabelForNumba(i, evaluatingProgramArrayInIntLabel, functionList, stackCountArray, evaluatingProgramList, functionDict, variableDict, stackCountDict, functionIndexInCUDADict):
     pass
 
-@jit
 def evaluate(programList, functionDict, stackCountDict):
     while(len(programList) > 1):
         #Detect a last function node to evaluate first
