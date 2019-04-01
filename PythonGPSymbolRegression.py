@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# for Python 3.6
+# for Python 3.7
 # This codes is a example of using the my Genetic Programming Library.
 # In this codes, Symbolic Regression with normal GA Scenario.
 # Daichi Ando @daichi_a daichi-a
