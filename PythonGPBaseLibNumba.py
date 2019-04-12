@@ -3,6 +3,7 @@
 # Simple Function Set Libarary for Genetic Programming in Python
 # Daichi Ando @daichi_a daichi-a
 import PythonGPBaseLib
+from PythonGPBaseLib import replaceVariableWithStatic, evaluate, initializeProgramList
 
 import random
 import copy
@@ -13,7 +14,40 @@ import codecs
 from numba import jit
 
 @jit
-def symbolRegressionNumba(programList, functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, targetFunction, index):
+def mutateProgramList(programList, functionDict, variableDict, staticList, stackCountDict, mutationRate):
+    currentIndex = 0
+    while(currentIndex < len(programList) -1):
+        subTreeLength = 1
+        if random.random() < mutationRate:
+            replacingSubTree = initializeProgramList(functionDict, variableDict, staticList, stackCountDict, -10)
+            subTreeLength = len(replacingSubTree)
+            removingSubTreeStackCount = 0
+            while(removingSubTreeStackCount < 1):
+                currentNode = programList.pop(currentIndex)
+                removingSubTreeStackCount += stackCountDict.get(currentNode) if currentNode in stackCountDict else 1
+            while(len(replacingSubTree) > 0):
+                programList.insert(currentIndex, replacingSubTree.pop())
+        currentIndex += subTreeLength
+
+@jit
+def mutatePopulation(population, functionDict, variableDict, staticList, stackCountDict, mutationRate, numOfElite):
+    threadList = []
+    for index, programList in enumerate(population):
+        #These 4 lines are for multi-threading:
+        #th_me = threading.Thread(target=mutateProgramList, name="th_me", args=(programList, functionDict, variableDict, staticList, stackCountDict, mutationRate))
+        #threadList.append(th_me)
+        #th_me.start()
+    #for aThread in threadList:
+        #aThread.join()
+
+        #On the contrary, this one line is for single-threading:
+        if index < numOfElite:
+            pass
+        else:
+            mutateProgramList(programList, functionDict, variableDict, staticList, stackCountDict, mutationRate)
+
+@jit
+def symbolRegression(programList, functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, targetFunction, index, functionIndexInCUDADict):
     # Argument: targetFunction 'MSE' or 'MDL'
     # In Genetic Programming GP Symbol Regression, MDL formula as follows:
     # MDL = (MSE * lengthOfSample) + lengthOfTree * log(lengthOfSample)
@@ -41,41 +75,13 @@ def symbolRegressionNumba(programList, functionDict, variableDict, staticList, s
         scoreArray[index] = numpy.mean(numpy.power((targetFxArray - fxArray), 2))
     
     return None
+    
 
 @jit
-def evaluatePopulationSymbolRegressionNumba(population, functionDict, variableDict, staticList, stackCountDict, timeArray, targetFxArray, scoreArray, targetFunction):
+def evaluatePopulationSymbolRegression(population, functionDict, variableDict, staticList, stackCountDict, timeArray, targetFxArray, scoreArray, targetFunction, functionIndexInCUDADict):
     for i in range(len(population)):
+        timeArray = timeArray.astype(numpy.float32)
+        targetFxArray = targetFxArray.astype(numpy.float32)
         fxArray = numpy.array(targetFxArray)
-        symbolRegressionNumba(population[i], functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, targetFunction, i)
 
-        
-@jit        
-def replaceVariableWithStatic(programList, variableDict):
-    for index, aNode in enumerate(programList):
-        if aNode in variableDict:
-            programList[index] = variableDict[aNode]
-
-@jit
-def replaceNodeToIntLabelForNumba(i, evaluatingProgramArrayInIntLabel, functionList, stackCountArray, evaluatingProgramList, functionDict, variableDict, stackCountDict, functionIndexInCUDADict):
-    pass
-
-def evaluate(programList, functionDict, stackCountDict):
-    while(len(programList) > 1):
-        #Detect a last function node to evaluate first
-        indexOfLastFunctionNode = -1;
-        for index, aNode in enumerate(reversed(programList)):
-            if type(aNode) is str:
-                indexOfLastFunctionNode = len(programList) - index -1
-                break
-        #Extract a subtree to evaluate
-        evaluatingSubTree = []
-        subTreeStackCount = 0
-        while(subTreeStackCount < 1):
-            evaluatingSubTree.append(programList.pop(indexOfLastFunctionNode))
-            subTreeStackCount += stackCountDict.get(evaluatingSubTree[-1], 1)
-        #Evaluate the subtree then replace subtree with the evaluated result
-        evaluatedValue = functionDict[evaluatingSubTree[0]](evaluatingSubTree)
-        programList.insert(indexOfLastFunctionNode, evaluatedValue)
-
-def evaluteNumba(programArray, functionDict, stackCountDict, functionIndexInCUDADict, evaluateSymbolRegressionKernelFunction):
-    pass
+        symbolRegression(population[i], functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray,  targetFunction, i, functionIndexInCUDADict)
