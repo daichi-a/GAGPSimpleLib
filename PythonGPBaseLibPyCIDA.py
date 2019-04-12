@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# for Python 3.6
+# for Python 3.7
 # Simple Function Set Libarary for Genetic Programming in Python
 # Daichi Ando @daichi_a daichi-a
-import PythonGPBaseLib
+from PythonGPBaseLib import replaceVariableWithStatic, evaluate, initializeProgramList
 
 import random
 import copy
@@ -15,7 +15,7 @@ import pycuda.driver
 from pycuda.compiler import SourceModule
 
 
-def symbolRegressionCUDA(programList, functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, kernelFunction, targetFunction, index):
+def symbolRegression(programList, functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, kernelFunction, targetFunction, index):
     targetFunctionIndex = numpy.zeros(1, dtype=numpy.int32);
     if targetFunction == 'MSE':
         targetFunctionIndex[0] = 0
@@ -45,7 +45,7 @@ def symbolRegressionCUDA(programList, functionDict, variableDict, staticList, st
     return None
 
 
-def evaluatePopulationSymbolRegressionCUDA(population, functionDict, variableDict, staticList, stackCountDict, timeArray, targetFxArray, scoreArray, targetFunction, functionIndexInCUDADict):
+def evaluatePopulationSymbolRegression(population, functionDict, variableDict, staticList, stackCountDict, timeArray, targetFxArray, scoreArray, targetFunction, functionIndexInCUDADict):
     #module = SourceModule(codecs.open('getSubThenPow.cuda', 'r').read())
     #kernelFunction = module.get_function('getSubThenPow')
     module = \
@@ -57,34 +57,4 @@ e
         targetFxArray = targetFxArray.astype(numpy.float32)
         fxArray = numpy.array(targetFxArray)
 
-        symbolRegressionCUDA(population[i], functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, kernelFunction, targetFunction, i, functionIndexInCUDADict)
-
-def replaceVariableWithStatic(programList, variableDict):
-    for index, aNode in enumerate(programList):
-        if aNode in variableDict:
-            programList[index] = variableDict[aNode]
-
-
-def replaceNodeToIntLabelForCUDA(i, evaluatingProgramArrayInIntLabel, functionList, stackCountArray, evaluatingProgramList, functionDict, variableDict, stackCountDict, functionIndexInCUDADict):
-    pass
-
-def evaluate(programList, functionDict, stackCountDict):
-    while(len(programList) > 1):
-        #Detect a last function node to evaluate first
-        indexOfLastFunctionNode = -1;
-        for index, aNode in enumerate(reversed(programList)):
-            if type(aNode) is str:
-                indexOfLastFunctionNode = len(programList) - index -1
-                break
-        #Extract a subtree to evaluate
-        evaluatingSubTree = []
-        subTreeStackCount = 0
-        while(subTreeStackCount < 1):
-            evaluatingSubTree.append(programList.pop(indexOfLastFunctionNode))
-            subTreeStackCount += stackCountDict.get(evaluatingSubTree[-1], 1)
-        #Evaluate the subtree then replace subtree with the evaluated result
-        evaluatedValue = functionDict[evaluatingSubTree[0]](evaluatingSubTree)
-        programList.insert(indexOfLastFunctionNode, evaluatedValue)
-
-def evaluteCUDA(programArray, functionDict, stackCountDict, functionIndexInCUDADict, evaluateSymbolRegressionKernelFunction):
-    pass
+        symbolRegression(population[i], functionDict, variableDict, staticList, stackCountDict, fxArray, timeArray, targetFxArray, scoreArray, kernelFunction, targetFunction, i, functionIndexInCUDADict)

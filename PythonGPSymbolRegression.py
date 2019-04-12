@@ -4,7 +4,7 @@
 # In this codes, Symbolic Regression with normal GA Scenario.
 # Daichi Ando @daichi_a daichi-a
 
-import PythonGPBaseLib #My GP Library
+from PythonGPBaseLib import initializePopulation, evaluatePopulationSymbolRegression, scorePopulation, crossoverPopulation, mutatePopulation
 
 import random
 import copy
@@ -18,7 +18,7 @@ random.seed(random_seed)
 #Set GP Parameters -------------------------------------------------------------
 
 #Number of Individual in a population
-populationSize = 1000
+populationSize = 500
 #Number of Loop Generations
 generationLimit = 1000
 
@@ -81,13 +81,13 @@ targetFxArray = numpy.array(list(map(lambda t: 3 * t ** 3 + -2 * t ** 2 + 6 * t 
 
 
 #Now Start the GP in Normal GA Scenario ----------------------------------------
-population = PythonGPBaseLib.initializePopulation(populationSize, functionDict, variableDict, staticList, stackCountDict, limitationDepthOfInitialCodes)
+population = initializePopulation(populationSize, functionDict, variableDict, staticList, stackCountDict, limitationDepthOfInitialCodes)
 
 for i in range(generationLimit):
     scoreArray = numpy.zeros(populationSize, dtype=float)
-    PythonGPBaseLib.evaluatePopulationSymbolRegression(population, functionDict, variableDict, staticList, stackCountDict, timeArray, targetFxArray, scoreArray, targetFunction)
-    PythonGPBaseLib.scorePopulation(population, scoreArray, 'UP', 'log', i, log_file_name)
+    evaluatePopulationSymbolRegression(population, functionDict, variableDict, staticList, stackCountDict, timeArray, targetFxArray, scoreArray, targetFunction)
+    scorePopulation(population, scoreArray, 'UP', 'log', i, log_file_name)
     newPopulation = []
-    PythonGPBaseLib.crossoverPopulation(population, newPopulation, scoreArray, 5, 'UP', stackCountDict, numOfElite)
-    PythonGPBaseLib.mutatePopulation(newPopulation, functionDict, variableDict, staticList, stackCountDict, mutationRate, numOfElite)
+    crossoverPopulation(population, newPopulation, scoreArray, 5, 'UP', stackCountDict, numOfElite)
+    mutatePopulation(newPopulation, functionDict, variableDict, staticList, stackCountDict, mutationRate, numOfElite)
     population = newPopulation

@@ -2,7 +2,6 @@
 # for Python 3.7
 # Simple Function Set Libarary for Genetic Programming in Python
 # Daichi Ando @daichi_a daichi-a
-import PythonGPBaseLib
 from PythonGPBaseLib import replaceVariableWithStatic, evaluate, initializeProgramList
 
 import random
